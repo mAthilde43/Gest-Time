@@ -6,21 +6,19 @@
   flex-direction: column;
 }
 
-.gest-time-title {
-  font-size: 60px;
-  font-family: diplomata;
-  color: black;
-  margin-bottom: 20px;
-  text-align: center;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
+.logo-container {
   position: absolute;
-  top: 60px;
+  top: 30px;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
+  text-align: center;
   z-index: 20;
+}
+
+.logo-login {
+  height: 200px;
+  width: auto;
 }
 
 .loginContainer {
@@ -85,12 +83,6 @@
 }
 .color-dashboard {
   background-color: #127598;
-}
-.titlePageDashboard {
-  font-family: diplomata;
-  text-align: center;
-  margin-top: 10px;
-  font-size: 30px;
 }
 
 .nav-link:hover {

@@ -26,6 +26,25 @@ router.post("/adminlogin", (req, res) => {
   });
 });
 
+router.get("/admin", (req, res) => {
+  const token = req.cookies.token;
+  console.log("TOKEN >>>", token); // ← ajoute ça
+
+  if (!token) {
+    return res.status(401).json({ Status: false, Error: "Token manquant" });
+  }
+
+  jwt.verify(token, "jwt_secret_key", (err, decoded) => {
+    if (err) {
+      console.log("JWT ERROR >>>", err); // ← ajoute ça aussi
+      return res.status(403).json({ Status: false, Error: "Token invalide" });
+    }
+
+    console.log("DECODED >>>", decoded); // ← et ça aussi
+    return res.json({ Status: true, Result: { email: decoded.email } });
+  });
+});
+
 router.get("/category", (req, res) => {
   const sql = "SELECT * FROM category";
   con.query(sql, (err, result) => {

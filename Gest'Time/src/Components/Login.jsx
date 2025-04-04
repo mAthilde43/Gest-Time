@@ -3,6 +3,7 @@ import "./style.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import loginImage from "../../public/Images/drawCalendar.jpg";
+import logoLogin from "../../public/Images/logo-login.png";
 
 const Login = () => {
   const [values, setValues] = useState({
@@ -30,7 +31,9 @@ const Login = () => {
 
   return (
     <div className="d-flex justify-content-center align-items-center vh-100 loginPage">
-      <h1 className="gest-time-title text-center">Gest-time</h1>
+      <div className="logo-container">
+        <img src={logoLogin} alt="Logo Login" className="logo-login" />
+      </div>
       <div className="loginContainer">
         <div className="loginImage">
           <img src={loginImage} alt="Login Illustration" />

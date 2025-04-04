@@ -121,7 +121,12 @@ const Home = () => {
 
   return (
     <div className="home-container px-5 py-4">
-      <h2 className="mb-4">Tableau de bord</h2>
+      <div
+        className="d-flex justify-content-center"
+        style={{ marginBottom: "10px" }}
+      >
+        <h3>Tableau de bord</h3>
+      </div>
 
       <div className="row">
         <div className="col-md-4">

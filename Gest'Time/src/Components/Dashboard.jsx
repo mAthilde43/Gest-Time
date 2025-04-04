@@ -1,12 +1,26 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import axios from "axios";
 import Logo from "../../public/Images/logo-transparent-png.png";
 
 const Dashboard = () => {
+  const [adminName, setAdminName] = useState("");
   const navigate = useNavigate();
   axios.defaults.withCredentials = true;
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:3000/auth/admin")
+      .then((res) => {
+        if (res.data.Status) {
+          setAdminName(res.data.Result.email); // Affiche directement l'email
+        }
+      })
+      .catch((err) => {
+        console.error("Erreur lors de la récupération de l'admin :", err);
+      });
+  }, []);
 
   const handleLogout = () => {
     axios
@@ -103,12 +117,20 @@ const Dashboard = () => {
         </div>
         <div className="col p-0 m-0">
           <div
-            className="p-2 d-flex justify-content-center"
+            className="p-2 d-flex justify-content-between align-items-center"
             style={{
               backgroundColor: "#8ae0ff",
             }}
           >
-            <h4 className="titlePageDashboard">Gest'Time</h4>
+            <div className="ms-auto">
+              <h3 style={{ fontSize: "18px", margin: "0 20px" }}>
+                Bienvenue{" "}
+                {adminName &&
+                  adminName.split(/[.@]/)[0].charAt(0).toUpperCase() +
+                    adminName.split(/[.@]/)[0].slice(1)}
+                <span style={{ fontSize: "12px", marginLeft: "5px" }}>✨</span>
+              </h3>
+            </div>
           </div>
           <Outlet />
         </div>
