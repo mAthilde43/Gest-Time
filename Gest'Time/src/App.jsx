@@ -21,13 +21,22 @@ import EditVehicules from "./Components/EditVehicules";
 import Vetements from "./Components/Vetements";
 import AddVetements from "./Components/AddVetements";
 import EditVetements from "./Components/EditVetements";
+import PrivateRoute from "./Components/PrivateRoute";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/adminlogin" element={<Login />}></Route>
-        <Route path="/dashboard" element={<Dashboard />}>
+
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          }
+        >
           <Route path="" element={<Home />}></Route>
           <Route path="/dashboard/calendar" element={<Calendar />}></Route>
           <Route path="/dashboard/employee" element={<Employee />}></Route>

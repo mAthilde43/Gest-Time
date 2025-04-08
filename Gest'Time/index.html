@@ -12,6 +12,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gest'Time</title>
   </head>
+  <script>
+    const password = "monmotdepasse";
+    const userPassword = prompt("Mot de passe requis :");
+    if (userPassword !== password) {
+      document.body.innerHTML = "<h1>Accès refusé</h1>";
+    }
+  </script>
+
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>

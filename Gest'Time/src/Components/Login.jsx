@@ -17,16 +17,21 @@ const Login = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    console.log("Form submitted", values);
+
     axios
       .post("http://localhost:3000/auth/adminlogin", values)
       .then((result) => {
+        console.log("Résultat du login:", result.data);
         if (result.data.loginStatus) {
           navigate("/dashboard");
         } else {
           setError(result.data.Error);
         }
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        console.log("Erreur axios:", err); // 🔥 Voir si ça part bien
+      });
   };
 
   return (
@@ -47,6 +52,7 @@ const Login = () => {
               <label htmlFor="email">Email:</label>
               <input
                 type="email"
+                id="email"
                 name="email"
                 autoComplete="off"
                 placeholder="Enter Email"
@@ -60,6 +66,7 @@ const Login = () => {
               <label htmlFor="password">Password:</label>
               <input
                 type="password"
+                id="password"
                 name="password"
                 placeholder="Enter Password"
                 onChange={(e) =>

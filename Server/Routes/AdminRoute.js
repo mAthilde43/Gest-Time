@@ -1,11 +1,13 @@
 import express from "express";
 import con from "../utils/db.js";
 import jwt from "jsonwebtoken";
-import bcrypt, { hash } from "bcrypt";
 import multer from "multer";
 import path from "path";
+import verifyToken from "../middleware/verifyToken.js";
 
 const router = express.Router();
+
+// const verifyToken = require("../middleware/verifyToken.js");
 
 router.post("/adminlogin", (req, res) => {
   const sql = "SELECT * FROM admin WHERE email = ? AND password = ?";
@@ -45,7 +47,11 @@ router.get("/admin", (req, res) => {
   });
 });
 
-router.get("/category", (req, res) => {
+router.get("/verify", verifyToken, (req, res) => {
+  res.json({ Status: true });
+});
+
+router.get("/category", verifyToken, (req, res) => {
   const sql = "SELECT * FROM category";
   con.query(sql, (err, result) => {
     if (err) return res.json({ Status: false, Error: "Query Error" });
@@ -53,7 +59,7 @@ router.get("/category", (req, res) => {
   });
 });
 
-router.post("/add_category", (req, res) => {
+router.post("/add_category", verifyToken, (req, res) => {
   const sql = "INSERT INTO category (`name`) VALUES (?)";
   con.query(sql, [req.body.category], (err, result) => {
     if (err) return res.json({ Status: false, Error: "Query Error" });
@@ -98,6 +104,7 @@ const uploadEmployee = multer({ storage: storagePermis });
 
 router.post(
   "/add_employee",
+  verifyToken,
   uploadEmployee.fields([
     { name: "image", maxCount: 1 },
     { name: "permis", maxCount: 1 },
@@ -133,7 +140,7 @@ router.post(
   }
 );
 
-router.get("/employee", (req, res) => {
+router.get("/employee", verifyToken, (req, res) => {
   const sql = "SELECT * FROM employee";
   con.query(sql, (err, result) => {
     if (err) return res.json({ Status: false, Error: "Query Error" });
@@ -141,7 +148,7 @@ router.get("/employee", (req, res) => {
   });
 });
 
-router.get("/employee/:id", (req, res) => {
+router.get("/employee/:id", verifyToken, (req, res) => {
   const id = req.params.id;
   const sql = "SELECT * FROM employee WHERE id = ?";
   con.query(sql, [id], (err, result) => {
@@ -152,6 +159,7 @@ router.get("/employee/:id", (req, res) => {
 
 router.put(
   "/edit_employee/:id",
+  verifyToken,
   uploadEmployee.fields([{ name: "permis", maxCount: 1 }]),
   (req, res) => {
     const id = req.params.id;
@@ -187,7 +195,7 @@ router.put(
   }
 );
 
-router.delete("/delete_employee/:id", (req, res) => {
+router.delete("/delete_employee/:id", verifyToken, (req, res) => {
   const id = req.params.id;
   const sql = "DELETE FROM employee WHERE id = ?";
   con.query(sql, [id], (err, result) => {
@@ -196,7 +204,7 @@ router.delete("/delete_employee/:id", (req, res) => {
   });
 });
 
-router.get("/admin_records", (req, res) => {
+router.get("/admin_records", verifyToken, (req, res) => {
   const sql = "SELECT * FROM admin";
   con.query(sql, (err, result) => {
     if (err) return res.json({ Status: false, Error: "Query Error" + err });
@@ -204,12 +212,12 @@ router.get("/admin_records", (req, res) => {
   });
 });
 
-router.get("/logout", (req, res) => {
+router.get("/logout", verifyToken, (req, res) => {
   res.clearCookie("token");
   return res.json({ Status: true });
 });
 
-router.get("/absences", (req, res) => {
+router.get("/absences", verifyToken, (req, res) => {
   const sql = "SELECT * FROM absences";
   con.query(sql, (err, result) => {
     if (err) return res.json({ Status: false, Error: "Query Error" });
@@ -245,7 +253,7 @@ router.get("/absences", (req, res) => {
   });
 });
 
-router.get("/absences/:id", (req, res) => {
+router.get("/absences/:id", verifyToken, (req, res) => {
   const id = req.params.id;
   const sql = "SELECT * FROM absences WHERE id = ?";
   con.query(sql, [id], (err, result) => {
@@ -254,7 +262,7 @@ router.get("/absences/:id", (req, res) => {
   });
 });
 
-router.post("/add_absences", (req, res) => {
+router.post("/add_absences", verifyToken, (req, res) => {
   const { employee_id, absence_type, start_date, end_date } = req.body;
   console.log("Données reçues :", req.body);
 
@@ -284,7 +292,7 @@ router.post("/add_absences", (req, res) => {
   });
 });
 
-router.put("/edit_absences/:id", (req, res) => {
+router.put("/edit_absences/:id", verifyToken, (req, res) => {
   const { id } = req.params;
   const { employee_id, absence_type, start_date, end_date } = req.body;
 
@@ -318,7 +326,7 @@ router.put("/edit_absences/:id", (req, res) => {
   );
 });
 
-router.delete("/delete_absences/:id", (req, res) => {
+router.delete("/delete_absences/:id", verifyToken, (req, res) => {
   const id = req.params.id;
   const sql = "DELETE FROM absences WHERE id = ?";
   con.query(sql, [id], (err, result) => {
@@ -338,7 +346,7 @@ const storageAssurance = multer.diskStorage({
 
 const uploadAssurance = multer({ storage: storageAssurance });
 
-router.get("/vehicules", (req, res) => {
+router.get("/vehicules", verifyToken, (req, res) => {
   const sql = `
     SELECT vehicules.*, employee.name, employee.firstname
     FROM vehicules
@@ -351,7 +359,7 @@ router.get("/vehicules", (req, res) => {
   });
 });
 
-router.get("/vehicules/:id", (req, res) => {
+router.get("/vehicules/:id", verifyToken, (req, res) => {
   const id = req.params.id;
 
   const sql = `
@@ -372,6 +380,7 @@ router.get("/vehicules/:id", (req, res) => {
 
 router.post(
   "/add_vehicules",
+  verifyToken,
   uploadAssurance.single("assurance"),
   (req, res) => {
     const { vehicules, conducteur_id } = req.body;
@@ -390,7 +399,7 @@ router.post(
   }
 );
 
-router.get("/vehicule/employee/:id", (req, res) => {
+router.get("/vehicule/employee/:id", verifyToken, (req, res) => {
   const employeeId = req.params.id;
   const sql = `
     SELECT vehicules.*
@@ -408,6 +417,7 @@ router.get("/vehicule/employee/:id", (req, res) => {
 
 router.put(
   "/edit_vehicules/:id",
+  verifyToken,
   uploadAssurance.single("assurance"),
   (req, res) => {
     const id = req.params.id;
@@ -433,7 +443,7 @@ router.put(
   }
 );
 
-router.delete("/delete_vehicules/:id", (req, res) => {
+router.delete("/delete_vehicules/:id", verifyToken, (req, res) => {
   const id = req.params.id;
   const sql = "DELETE FROM vehicules WHERE id = ?";
   con.query(sql, [id], (err, result) => {
@@ -446,7 +456,7 @@ router.delete("/delete_vehicules/:id", (req, res) => {
 // ROUTES VISITE MÉDICALE
 
 // Récupérer toutes les visites médicales d'un employé
-router.get("/visitmedical/:id", (req, res) => {
+router.get("/visitmedical/:id", verifyToken, (req, res) => {
   const employeeId = req.params.id;
   const sql =
     "SELECT * FROM visitmedical WHERE employee_id = ? ORDER BY visitdate DESC";
@@ -458,7 +468,7 @@ router.get("/visitmedical/:id", (req, res) => {
 });
 
 // Récupérer toutes les visites médicales avec nom/prénom employé
-router.get("/visitmedical", (req, res) => {
+router.get("/visitmedical", verifyToken, (req, res) => {
   const sql = `
     SELECT visitmedical.*, employee.name, employee.firstname
     FROM visitmedical
@@ -479,7 +489,7 @@ router.get("/visitmedical", (req, res) => {
 });
 
 // Ajouter une visite médicale
-router.post("/visitmedical", (req, res) => {
+router.post("/visitmedical", verifyToken, (req, res) => {
   const { employee_id, visitdate } = req.body;
   if (!employee_id || !visitdate) {
     return res
@@ -498,7 +508,7 @@ router.post("/visitmedical", (req, res) => {
 });
 
 // Supprimer une visite médicale
-router.delete("/visitmedical/:id", (req, res) => {
+router.delete("/visitmedical/:id", verifyToken, (req, res) => {
   const id = req.params.id;
   const sql = "DELETE FROM visitmedical WHERE id = ?";
   con.query(sql, [id], (err, result) => {
@@ -511,7 +521,7 @@ router.delete("/visitmedical/:id", (req, res) => {
 });
 
 // Modifier une visite médicale
-router.put("/visitmedical/:id", (req, res) => {
+router.put("/visitmedical/:id", verifyToken, (req, res) => {
   const id = req.params.id;
   const { visitdate } = req.body;
   const sql = "UPDATE visitmedical SET visitdate = ? WHERE id = ?";
@@ -531,7 +541,7 @@ router.put("/visitmedical/:id", (req, res) => {
 
 // GET toutes les tailles avec les noms d'employés
 
-router.get("/vetements", (req, res) => {
+router.get("/vetements", verifyToken, (req, res) => {
   const sql = `
     SELECT 
       vetements.id,
@@ -555,7 +565,7 @@ router.get("/vetements", (req, res) => {
   });
 });
 
-router.get("/vetements/:id", (req, res) => {
+router.get("/vetements/:id", verifyToken, (req, res) => {
   const id = req.params.id;
   const sql = "SELECT * FROM vetements WHERE id = ?";
   con.query(sql, [id], (err, result) => {
@@ -573,7 +583,7 @@ router.get("/vetements/:id", (req, res) => {
 });
 
 // POST ajouter
-router.post("/add_vetements", (req, res) => {
+router.post("/add_vetements", verifyToken, (req, res) => {
   console.log("Données reçues pour ajout :", req.body); // Ajout pour debug
 
   const sql =
@@ -596,7 +606,7 @@ router.post("/add_vetements", (req, res) => {
 });
 
 // PUT modifier
-router.put("/edit_vetements/:id", (req, res) => {
+router.put("/edit_vetements/:id", verifyToken, (req, res) => {
   const sql =
     "UPDATE vetements SET veste = ?, pull = ?, pantalon = ?, chaussures = ? WHERE id = ?";
   const values = [
@@ -613,7 +623,7 @@ router.put("/edit_vetements/:id", (req, res) => {
 });
 
 // DELETE
-router.delete("/delete_vetements/:id", (req, res) => {
+router.delete("/delete_vetements/:id", verifyToken, (req, res) => {
   con.query("DELETE FROM vetements WHERE id = ?", [req.params.id], (err) => {
     if (err) return res.json({ Status: false, Error: err });
     return res.json({ Status: true });
@@ -632,21 +642,26 @@ const storageScans = multer.diskStorage({
 const uploadScans = multer({ storage: storageScans });
 
 // POST - Upload de plusieurs fichiers scans
-router.post("/upload_scans/:id", uploadScans.array("scans"), (req, res) => {
-  const employee_id = req.params.id;
-  const files = req.files;
+router.post(
+  "/upload_scans/:id",
+  verifyToken,
+  uploadScans.array("scans"),
+  (req, res) => {
+    const employee_id = req.params.id;
+    const files = req.files;
 
-  const values = files.map((file) => [employee_id, file.filename]);
+    const values = files.map((file) => [employee_id, file.filename]);
 
-  const sql = "INSERT INTO scans (employee_id, namescans) VALUES ?";
-  con.query(sql, [values], (err, result) => {
-    if (err) return res.json({ Status: false, Error: err });
-    return res.json({ Status: true });
-  });
-});
+    const sql = "INSERT INTO scans (employee_id, namescans) VALUES ?";
+    con.query(sql, [values], (err, result) => {
+      if (err) return res.json({ Status: false, Error: err });
+      return res.json({ Status: true });
+    });
+  }
+);
 
 // GET - Liste des scans d'un employé
-router.get("/scans/:id", (req, res) => {
+router.get("/scans/:id", verifyToken, (req, res) => {
   const sql = "SELECT * FROM scans WHERE employee_id = ?";
   con.query(sql, [req.params.id], (err, result) => {
     if (err) return res.json({ Status: false, Error: err });
@@ -655,7 +670,7 @@ router.get("/scans/:id", (req, res) => {
 });
 
 // DELETE - Supprimer un scan
-router.delete("/delete_scan/:id", async (req, res) => {
+router.delete("/delete_scan/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
   try {
     // Supprimer le fichier de la base de données et/ou du disque
