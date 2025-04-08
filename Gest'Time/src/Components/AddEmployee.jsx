@@ -10,9 +10,9 @@ const AddEmployee = () => {
     phone: "",
     email: "",
     address: "",
-    // password: "",
     category_id: "",
     image: "",
+    permis: "",
   });
   const [category, setCategory] = useState([]);
   const navigate = useNavigate();
@@ -38,9 +38,9 @@ const AddEmployee = () => {
     formData.append("phone", employee.phone);
     formData.append("email", employee.email);
     formData.append("address", employee.address);
-    // formData.append("password", employee.password);
     formData.append("image", employee.image);
     formData.append("category_id", employee.category_id);
+    formData.append("permis", employee.permis);
 
     axios
       .post("http://localhost:3000/auth/add_employee", formData, {
@@ -141,22 +141,6 @@ const AddEmployee = () => {
             />
           </div>
 
-          {/* <div className="col-12">
-            <label htmlFor="inputPassword" className="form-label">
-              Mot de passe
-            </label>
-            <input
-              type="text"
-              className="form-control rounded-10"
-              id="inputPassword"
-              placeholder="Entrer le Mot de passe"
-              autoComplete="off"
-              onChange={(e) =>
-                setEmployee({ ...employee, password: e.target.value })
-              }
-            />
-          </div> */}
-
           <div className="col-12">
             <label htmlFor="category" className="form-label">
               Status
@@ -191,6 +175,22 @@ const AddEmployee = () => {
               //   accept="image/*"
               onChange={(e) =>
                 setEmployee({ ...employee, image: e.target.files[0] })
+              }
+            />
+          </div>
+
+          <div className="col-12 mb-3">
+            <label className="form-label" htmlFor="inputPermis">
+              Télécharger le Permis de Conduire
+            </label>
+            <input
+              type="file"
+              className="form-control rounded-10"
+              id="inputPermis"
+              name="permis"
+              accept="application/pdf"
+              onChange={(e) =>
+                setEmployee({ ...employee, permis: e.target.files[0] })
               }
             />
           </div>

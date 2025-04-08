@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 
 const Profile = () => {
   const [employees, setEmployees] = useState([]);
-  const [employeeTotal, setEmployeeTotal] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -13,7 +12,6 @@ const Profile = () => {
       .then((res) => {
         if (res.data.Status) {
           setEmployees(res.data.Result);
-          setEmployeeTotal(res.data.Result.length);
         } else {
           alert(res.data.Error);
         }
@@ -31,10 +29,6 @@ const Profile = () => {
     <div className="px-5 mt-3">
       <div className="d-flex justify-content-center">
         <h3>Profil des Employés</h3>
-      </div>
-
-      <div className="d-flex justify-content-end my-2">
-        <h5>Total des Employés : {employeeTotal}</h5>
       </div>
 
       <div className="filter d-flex justify-content-between align-items-center my-3">
@@ -66,7 +60,7 @@ const Profile = () => {
                   <td>
                     <Link
                       to={`/dashboard/profile/${e.id}`}
-                      className="btn btn-primary btn-sm"
+                      className="btn btn-info btn-sm"
                     >
                       Voir plus
                     </Link>

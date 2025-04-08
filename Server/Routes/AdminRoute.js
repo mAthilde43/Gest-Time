@@ -78,38 +78,60 @@ const upload = multer({
 });
 //end image upload
 
-router.post("/add_employee", upload.single("image"), (req, res) => {
-  if (!req.file) {
-    return res.json({ Status: false, Error: "Image is required!" });
-  }
-
-  const sql =
-    "INSERT INTO employee (name, firstname, phone, email, address, image, category_id) VALUES (?)";
-  // bcrypt.hash(req.body.password.toString(), 10, (err, hash) => {
-  //   if (err) {
-  //     console.error("Erreur de hashage :", err);
-  //     return res.json({ Status: false, Error: "Error hashing password" });
-  //   }
-  const values = [
-    req.body.name,
-    req.body.firstname,
-    req.body.phone,
-    req.body.email,
-    // hash,
-    req.body.address,
-    req.file.filename,
-    req.body.category_id,
-  ];
-
-  con.query(sql, [values], (err, result) => {
-    if (err) {
-      console.error("Erreur SQL :", err);
-      return res.json({ Status: false, Error: "Database Insertion Error" });
+const storagePermis = multer.diskStorage({
+  destination: (req, file, cb) => {
+    if (file.fieldname === "image") {
+      cb(null, "Public/Images");
+    } else if (file.fieldname === "permis") {
+      cb(null, "Public/Permis");
     }
-    return res.json({ Status: true, Message: "Employee Added Successfully" });
-  });
+  },
+  filename: (req, file, cb) => {
+    cb(
+      null,
+      file.fieldname + "_" + Date.now() + path.extname(file.originalname)
+    );
+  },
 });
-// });
+
+const uploadEmployee = multer({ storage: storagePermis });
+
+router.post(
+  "/add_employee",
+  uploadEmployee.fields([
+    { name: "image", maxCount: 1 },
+    { name: "permis", maxCount: 1 },
+  ]),
+  (req, res) => {
+    if (!req.files || !req.files.image || !req.files.permis) {
+      return res.json({ Status: false, Error: "Image et permis requis !" });
+    }
+
+    const sql = `
+    INSERT INTO employee 
+    (name, firstname, phone, email, address, image, permis, category_id) 
+    VALUES (?)`;
+
+    const values = [
+      req.body.name,
+      req.body.firstname,
+      req.body.phone,
+      req.body.email,
+      req.body.address,
+      req.files.image[0].filename,
+      req.files.permis[0].filename,
+      req.body.category_id,
+    ];
+
+    con.query(sql, [values], (err, result) => {
+      if (err) {
+        console.error("Erreur SQL :", err);
+        return res.json({ Status: false, Error: "Erreur insertion employé" });
+      }
+      return res.json({ Status: true, Message: "Employé ajouté avec permis" });
+    });
+  }
+);
 
 router.get("/employee", (req, res) => {
   const sql = "SELECT * FROM employee";
@@ -128,22 +150,42 @@ router.get("/employee/:id", (req, res) => {
   });
 });
 
-router.put("/edit_employee/:id", (req, res) => {
-  const id = req.params.id;
-  const sql = `UPDATE employee set name= ?, firstname=?, phone= ?, email= ?, address= ?, category_id= ? WHERE id = ?`;
-  const values = [
-    req.body.name,
-    req.body.firstname,
-    req.body.phone,
-    req.body.email,
-    req.body.address,
-    req.body.category_id,
-  ];
-  con.query(sql, [...values, id], (err, result) => {
-    if (err) return res.json({ Status: false, Error: "Query Error" + err });
-    return res.json({ Status: true, Result: result });
-  });
-});
+router.put(
+  "/edit_employee/:id",
+  uploadEmployee.fields([{ name: "permis", maxCount: 1 }]),
+  (req, res) => {
+    const id = req.params.id;
+    const { name, firstname, phone, email, address, category_id } = req.body;
+
+    let sql = "";
+    let values = [];
+
+    if (req.files && req.files.permis) {
+      // Si un nouveau permis est envoyé
+      const permis = req.files.permis[0].filename;
+      sql = `UPDATE employee SET name=?, firstname=?, phone=?, email=?, address=?, category_id=?, permis=? WHERE id = ?`;
+      values = [
+        name,
+        firstname,
+        phone,
+        email,
+        address,
+        category_id,
+        permis,
+        id,
+      ];
+    } else {
+      // Si aucun permis envoyé
+      sql = `UPDATE employee SET name=?, firstname=?, phone=?, email=?, address=?, category_id=? WHERE id = ?`;
+      values = [name, firstname, phone, email, address, category_id, id];
+    }
+
+    con.query(sql, values, (err, result) => {
+      if (err) return res.json({ Status: false, Error: "Query Error: " + err });
+      return res.json({ Status: true, Result: result });
+    });
+  }
+);
 
 router.delete("/delete_employee/:id", (req, res) => {
   const id = req.params.id;
@@ -285,6 +327,17 @@ router.delete("/delete_absences/:id", (req, res) => {
   });
 });
 
+const storageAssurance = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "Public/Assurances");
+  },
+  filename: (req, file, cb) => {
+    cb(null, "assurance_" + Date.now() + path.extname(file.originalname));
+  },
+});
+
+const uploadAssurance = multer({ storage: storageAssurance });
+
 router.get("/vehicules", (req, res) => {
   const sql = `
     SELECT vehicules.*, employee.name, employee.firstname
@@ -302,7 +355,7 @@ router.get("/vehicules/:id", (req, res) => {
   const id = req.params.id;
 
   const sql = `
-    SELECT vehicules.*, employee.name, employee.firstname
+    SELECT vehicules*, employee.name, employee.firstname
     FROM vehicules
     LEFT JOIN employee ON vehicules.conducteur_id = employee.id
     WHERE vehicules.id = ?
@@ -317,16 +370,25 @@ router.get("/vehicules/:id", (req, res) => {
   });
 });
 
-router.post("/add_vehicules", (req, res) => {
-  const { vehicules, conducteur_id } = req.body;
+router.post(
+  "/add_vehicules",
+  uploadAssurance.single("assurance"),
+  (req, res) => {
+    const { vehicules, conducteur_id } = req.body;
+    const assuranceFile = req.file ? req.file.filename : null;
 
-  const sql =
-    "INSERT INTO vehicules (`vehicules`, `conducteur_id`) VALUES (?, ?)";
-  con.query(sql, [vehicules, conducteur_id || null], (err, result) => {
-    if (err) return res.json({ Status: false, Error: err });
-    return res.json({ Status: true });
-  });
-});
+    const sql =
+      "INSERT INTO vehicules (vehicules, conducteur_id, assurance) VALUES (?, ?, ?)";
+    con.query(
+      sql,
+      [vehicules, conducteur_id || null, assuranceFile],
+      (err, result) => {
+        if (err) return res.json({ Status: false, Error: err });
+        return res.json({ Status: true });
+      }
+    );
+  }
+);
 
 router.get("/vehicule/employee/:id", (req, res) => {
   const employeeId = req.params.id;
@@ -344,17 +406,32 @@ router.get("/vehicule/employee/:id", (req, res) => {
   });
 });
 
-router.put("/edit_vehicules/:id", (req, res) => {
-  const id = req.params.id;
-  const { vehicules, conducteur_id } = req.body;
+router.put(
+  "/edit_vehicules/:id",
+  uploadAssurance.single("assurance"),
+  (req, res) => {
+    const id = req.params.id;
+    const { vehicules, conducteur_id } = req.body;
+    const assuranceFile = req.file ? req.file.filename : null;
 
-  const sql =
-    "UPDATE vehicules SET vehicules = ?, conducteur_id = ? WHERE id = ?";
-  con.query(sql, [vehicules, conducteur_id, id], (err, result) => {
-    if (err) return res.json({ Status: false, Error: err });
-    return res.json({ Status: true, Message: "Véhicule mis à jour" });
-  });
-});
+    // Construire dynamiquement la requête SQL
+    let sql;
+    let values;
+
+    if (assuranceFile) {
+      sql = `UPDATE vehicules SET vehicules = ?, conducteur_id = ?, assurance = ? WHERE id = ?`;
+      values = [vehicules, conducteur_id || null, assuranceFile, id];
+    } else {
+      sql = `UPDATE vehicules SET vehicules = ?, conducteur_id = ? WHERE id = ?`;
+      values = [vehicules, conducteur_id || null, id];
+    }
+
+    con.query(sql, values, (err, result) => {
+      if (err) return res.json({ Status: false, Error: err });
+      return res.json({ Status: true, Message: "Véhicule mis à jour" });
+    });
+  }
+);
 
 router.delete("/delete_vehicules/:id", (req, res) => {
   const id = req.params.id;
@@ -448,6 +525,146 @@ router.put("/visitmedical/:id", (req, res) => {
       Message: "Visite mise à jour avec succès",
     });
   });
+});
+
+// Ajoute ces routes à ton fichier AdmionRoute.js
+
+// GET toutes les tailles avec les noms d'employés
+
+router.get("/vetements", (req, res) => {
+  const sql = `
+    SELECT 
+      vetements.id,
+      vetements.employee_id,
+      employee.firstname,
+      employee.name,
+      vetements.veste,
+      vetements.pull,
+      vetements.pantalon,
+      vetements.chaussures
+    FROM vetements
+    LEFT JOIN employee ON vetements.employee_id = employee.id
+  `;
+
+  con.query(sql, (err, result) => {
+    if (err) {
+      console.error("Erreur lors du chargement des vêtements :", err);
+      return res.status(500).json({ Status: false, Error: err });
+    }
+    return res.json({ Status: true, Result: result });
+  });
+});
+
+router.get("/vetements/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "SELECT * FROM vetements WHERE id = ?";
+  con.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error("Erreur lors de la récupération des vêtements :", err);
+      return res.status(500).json({ Status: false, Error: err });
+    }
+    if (result.length === 0) {
+      return res
+        .status(404)
+        .json({ Status: false, Message: "Vêtement non trouvé" });
+    }
+    return res.json({ Status: true, Result: result });
+  });
+});
+
+// POST ajouter
+router.post("/add_vetements", (req, res) => {
+  console.log("Données reçues pour ajout :", req.body); // Ajout pour debug
+
+  const sql =
+    "INSERT INTO vetements (employee_id, veste, pull, pantalon, chaussures) VALUES (?)";
+  const values = [
+    req.body.employee_id,
+    req.body.veste,
+    req.body.pull,
+    req.body.pantalon,
+    req.body.chaussures,
+  ];
+
+  con.query(sql, [values], (err) => {
+    if (err) {
+      console.error("Erreur SQL :", err); // Ajout pour debug
+      return res.status(500).json({ Status: false, Error: err });
+    }
+    return res.json({ Status: true });
+  });
+});
+
+// PUT modifier
+router.put("/edit_vetements/:id", (req, res) => {
+  const sql =
+    "UPDATE vetements SET veste = ?, pull = ?, pantalon = ?, chaussures = ? WHERE id = ?";
+  const values = [
+    req.body.veste,
+    req.body.pull,
+    req.body.pantalon,
+    req.body.chaussures,
+    req.params.id,
+  ];
+  con.query(sql, values, (err) => {
+    if (err) return res.json({ Status: false, Error: err });
+    return res.json({ Status: true });
+  });
+});
+
+// DELETE
+router.delete("/delete_vetements/:id", (req, res) => {
+  con.query("DELETE FROM vetements WHERE id = ?", [req.params.id], (err) => {
+    if (err) return res.json({ Status: false, Error: err });
+    return res.json({ Status: true });
+  });
+});
+
+const storageScans = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "Public/Scans/");
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = Date.now() + "-" + file.originalname;
+    cb(null, uniqueName);
+  },
+});
+const uploadScans = multer({ storage: storageScans });
+
+// POST - Upload de plusieurs fichiers scans
+router.post("/upload_scans/:id", uploadScans.array("scans"), (req, res) => {
+  const employee_id = req.params.id;
+  const files = req.files;
+
+  const values = files.map((file) => [employee_id, file.filename]);
+
+  const sql = "INSERT INTO scans (employee_id, namescans) VALUES ?";
+  con.query(sql, [values], (err, result) => {
+    if (err) return res.json({ Status: false, Error: err });
+    return res.json({ Status: true });
+  });
+});
+
+// GET - Liste des scans d'un employé
+router.get("/scans/:id", (req, res) => {
+  const sql = "SELECT * FROM scans WHERE employee_id = ?";
+  con.query(sql, [req.params.id], (err, result) => {
+    if (err) return res.json({ Status: false, Error: err });
+    return res.json({ Status: true, Result: result });
+  });
+});
+
+// DELETE - Supprimer un scan
+router.delete("/delete_scan/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Supprimer le fichier de la base de données et/ou du disque
+    await con.query("DELETE FROM scans WHERE id = ?", [id]);
+    res.status(200).json({ message: "Fichier supprimé avec succès" });
+  } catch (error) {
+    console.error("Erreur lors de la suppression du scan:", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
 });
 
 export { router as adminRouter };

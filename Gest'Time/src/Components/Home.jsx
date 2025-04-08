@@ -89,28 +89,6 @@ const Home = () => {
       });
   };
 
-  const getMonthlyAbsenceCount = () => {
-    const now = new Date();
-    const month = now.getMonth();
-    const year = now.getFullYear();
-
-    return absenceData.reduce((total, absence) => {
-      const start = new Date(absence.start_date);
-      const end = new Date(absence.end_date);
-
-      let count = 0;
-      let current = new Date(start);
-      while (current <= end) {
-        if (current.getMonth() === month && current.getFullYear() === year) {
-          count++;
-        }
-        current.setDate(current.getDate() + 1);
-      }
-
-      return total + count;
-    }, 0);
-  };
-
   const getMonthlyMedicalVisits = () => {
     const now = new Date();
     const currentMonth = now.getMonth();
@@ -157,7 +135,6 @@ const Home = () => {
   };
 
   const todayAbsentees = getTodayAbsentees();
-  const totalMonthlyAbsences = getMonthlyAbsenceCount();
   const monthlyVisits = getMonthlyMedicalVisits();
 
   return (
@@ -181,14 +158,6 @@ const Home = () => {
         <div className="col-md-4">
           <div className="card text-white mb-3 shadow-sm">
             <div className="card-body">
-              <h5 className="card-title">Jours d'absence ce mois-ci</h5>
-              <p className="card-text fs-3">{totalMonthlyAbsences}</p>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-4">
-          <div className="card text-white mb-3 shadow-sm">
-            <div className="card-body">
               <h5 className="card-title">Absents aujourd'hui</h5>
               {todayAbsentees.length > 0 ? (
                 <ul className="mb-0">
@@ -202,8 +171,7 @@ const Home = () => {
             </div>
           </div>
         </div>
-
-        <div className="col-md-6">
+        <div className="col-md-4">
           <div className="card text-white mb-3 shadow-sm">
             <div className="card-body">
               <h5 className="card-title">Prochaines visites médicales</h5>

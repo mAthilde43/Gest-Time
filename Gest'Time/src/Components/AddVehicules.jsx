@@ -6,6 +6,7 @@ const AddVehicules = () => {
   const [vehicules, setVehicules] = useState("");
   const [employees, setEmployees] = useState([]);
   const [selectedConducteur, setSelectedConducteur] = useState("");
+  const [assuranceFile, setAssuranceFile] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,14 +34,22 @@ const AddVehicules = () => {
     setVehicules(value);
   };
 
+  const handleFileChange = (e) => {
+    setAssuranceFile(e.target.files[0]);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    const formData = new FormData();
+    formData.append("vehicules", vehicules);
+    formData.append("conducteur_id", selectedConducteur || "");
+    if (assuranceFile) {
+      formData.append("assurance", assuranceFile);
+    }
+
     axios
-      .post("http://localhost:3000/auth/add_vehicules", {
-        vehicules,
-        conducteur_id: selectedConducteur || null,
-      })
+      .post("http://localhost:3000/auth/add_vehicules", formData)
       .then((result) => {
         if (result.data.Status) {
           navigate("/dashboard/vehicules");
@@ -57,7 +66,7 @@ const AddVehicules = () => {
         <h2 className="title-form">
           Ajouter une nouvelle plaque d'immatriculation
         </h2>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} encType="multipart/form-data">
           <div className="mb-3">
             <label htmlFor="vehicules">Plaque d'immatriculation :</label>
             <input
@@ -68,6 +77,7 @@ const AddVehicules = () => {
               onChange={handleChange}
               className="form-control rounded-10"
               maxLength={10}
+              required
             />
           </div>
 
@@ -85,6 +95,16 @@ const AddVehicules = () => {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="mb-3">
+            <label htmlFor="assurance">Assurance (PDF uniquement) :</label>
+            <input
+              type="file"
+              accept="application/pdf"
+              className="form-control rounded-10"
+              onChange={handleFileChange}
+            />
           </div>
 
           <div className="d-flex justify-content-center">

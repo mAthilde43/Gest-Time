@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 
 const Vehicules = () => {
   const [vehicules, setVehicules] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     axios
@@ -36,29 +37,65 @@ const Vehicules = () => {
     }
   };
 
+  const filteredVehicules = vehicules.filter((v) => {
+    const query = searchTerm.toLowerCase();
+    return (
+      v.vehicules.toLowerCase().includes(query) ||
+      (v.name && v.name.toLowerCase().includes(query)) ||
+      (v.firstname && v.firstname.toLowerCase().includes(query))
+    );
+  });
+
   return (
     <div className="px-5 mt-3">
       <div className="d-flex justify-content-center">
         <h3>Liste des plaques d'immatriculation</h3>
       </div>
-      <Link to="/dashboard/add_vehicules" className="btn add-button">
-        Nouvelle plaque d'immatriculation
-      </Link>
-      <div className="mt-3">
+
+      <div className="filter d-flex justify-content-between my-3">
+        <Link to="/dashboard/add_vehicules" className="btn add-button">
+          Nouvelle plaque d'immatriculation
+        </Link>
+        <input
+          type="text"
+          placeholder="Nom, prénom ou plaque"
+          className="form-control w-25"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
+      <div className="table-responsive">
         <table className="table">
           <thead>
             <tr>
               <th>N° d'immatriculation</th>
               <th>Conducteur</th>
+              <th>Assurance</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            {vehicules.map((v) => (
+            {filteredVehicules.map((v) => (
               <tr key={v.id}>
                 <td>{v.vehicules}</td>
                 <td>
                   {v.name && v.firstname ? `${v.name} ${v.firstname}` : ""}
+                </td>
+                <td>
+                  {v.assurance ? (
+                    <a
+                      href={`http://localhost:3000/Public/Assurances/${v.assurance}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-decoration-none text-dark d-inline-block"
+                      title="Voir l'assurance"
+                    >
+                      <i className="bi bi-eye-fill fs-5"></i>
+                    </a>
+                  ) : (
+                    "-"
+                  )}
                 </td>
                 <td>
                   <Link
@@ -76,9 +113,9 @@ const Vehicules = () => {
                 </td>
               </tr>
             ))}
-            {vehicules.length === 0 && (
+            {filteredVehicules.length === 0 && (
               <tr>
-                <td colSpan="3" className="text-center">
+                <td colSpan="4" className="text-center">
                   Aucun véhicule trouvé.
                 </td>
               </tr>

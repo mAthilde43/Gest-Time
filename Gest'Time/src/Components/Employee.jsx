@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import "bootstrap-icons/font/bootstrap-icons.css";
 
 const Employee = () => {
   const [employee, setEmployee] = useState([]);
@@ -71,6 +72,7 @@ const Employee = () => {
               <th>N°</th>
               <th>Email</th>
               <th>Adresse</th>
+              <th>Permis</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -81,7 +83,7 @@ const Employee = () => {
                 <tr key={e.id}>
                   <td>
                     <img
-                      src={`http://localhost:3000/Images/${e.image}`}
+                      src={`http://localhost:3000/Public/Images/${e.image}`}
                       alt={employee.name}
                       className="employee_image"
                     />
@@ -91,6 +93,22 @@ const Employee = () => {
                   <td>{e.phone}</td>
                   <td>{e.email}</td>
                   <td>{e.address}</td>
+                  <td>
+                    {e.permis ? (
+                      <a
+                        href={`http://localhost:3000/Public/Permis/${e.permis}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-decoration-none text-dark d-inline-block"
+                        title="Voir l'assurance"
+                      >
+                        <i className="bi bi-eye-fill fs-5"></i>
+                      </a>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+
                   <td>
                     <Link
                       to={"/dashboard/edit_employee/" + e.id}

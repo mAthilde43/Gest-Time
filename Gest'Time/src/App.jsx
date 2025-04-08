@@ -18,6 +18,9 @@ import AddVehicules from "./Components/AddVehicules";
 import Profile from "./Components/Profile";
 import ProfileDetail from "./Components/ProfileDetail";
 import EditVehicules from "./Components/EditVehicules";
+import Vetements from "./Components/Vetements";
+import AddVetements from "./Components/AddVetements";
+import EditVetements from "./Components/EditVetements";
 
 function App() {
   return (
@@ -32,7 +35,7 @@ function App() {
           <Route path="/dashboard/absences" element={<Absence />}></Route>
           <Route path="/dashboard/vehicules" element={<Vehicules />}></Route>
           <Route path="/dashboard/profile" element={<Profile />}></Route>
-
+          <Route path="/dashboard/vetements" element={<Vetements />}></Route>
           <Route
             path="/dashboard/add_category"
             element={<AddCategory />}
@@ -64,6 +67,14 @@ function App() {
           <Route
             path="/dashboard/profile/:id"
             element={<ProfileDetail />}
+          ></Route>
+          <Route
+            path="/dashboard/add_vetements"
+            element={<AddVetements />}
+          ></Route>
+          <Route
+            path="/dashboard/edit_vetements/:id"
+            element={<EditVetements />}
           ></Route>
         </Route>
       </Routes>

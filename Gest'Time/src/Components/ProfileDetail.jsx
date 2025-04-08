@@ -9,20 +9,17 @@ const ProfilDetail = () => {
   const [visits, setVisits] = useState([]);
   const [vehicules, setVehicules] = useState([]);
   const [newVisitDate, setNewVisitDate] = useState("");
+  const [vetement, setVetement] = useState(null);
+  const [scans, setScans] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState([]);
 
   useEffect(() => {
     axios.get(`http://localhost:3000/auth/employee/${id}`).then((res) => {
-      if (res.data.Status) {
-        setEmployee(res.data.Result[0]);
-      } else {
-        alert(res.data.Error);
-      }
+      if (res.data.Status) setEmployee(res.data.Result[0]);
     });
 
     axios.get("http://localhost:3000/auth/category").then((res) => {
-      if (res.data.Status) {
-        setCategories(res.data.Result);
-      }
+      if (res.data.Status) setCategories(res.data.Result);
     });
 
     axios
@@ -32,15 +29,24 @@ const ProfilDetail = () => {
     axios
       .get(`http://localhost:3000/auth/vehicule/employee/${id}`)
       .then((res) => {
-        if (res.data.Status) {
-          setVehicules(res.data.Result);
-        }
+        if (res.data.Status) setVehicules(res.data.Result);
       });
+
+    axios.get("http://localhost:3000/auth/vetements").then((res) => {
+      if (res.data.Status) {
+        const found = res.data.Result.find(
+          (v) => v.employee_id === parseInt(id)
+        );
+        if (found) setVetement(found);
+      }
+    });
+    axios.get(`http://localhost:3000/auth/scans/${id}`).then((res) => {
+      if (res.data.Status) setScans(res.data.Result);
+    });
   }, [id]);
 
   const addVisitDate = () => {
     if (!newVisitDate) return alert("Veuillez choisir une date");
-
     axios
       .post("http://localhost:3000/auth/visitmedical", {
         employee_id: id,
@@ -63,17 +69,46 @@ const ProfilDetail = () => {
       });
   };
 
+  const handleScanUpload = () => {
+    if (selectedFiles.length === 0) return;
+
+    const formData = new FormData();
+    Array.from(selectedFiles).forEach((file) => {
+      formData.append("scans", file);
+    });
+
+    axios
+      .post(`http://localhost:3000/auth/upload_scans/${id}`, formData)
+      .then(() => {
+        return axios.get(`http://localhost:3000/auth/scans/${id}`);
+      })
+      .then((res) => {
+        if (res.data.Status) {
+          setScans(res.data.Result);
+          setSelectedFiles([]);
+        }
+      });
+  };
+
+  const deleteScan = (scanId) => {
+    axios
+      .delete(`http://localhost:3000/auth/delete_scan/${scanId}`)
+      .then(() => {
+        setScans(scans.filter((s) => s.id !== scanId));
+      });
+  };
+
   const categoryName =
     categories.find((cat) => cat.id === employee.category_id)?.name ||
     "Inconnu";
 
   return (
     <div className="container mt-4">
+      {/* Header */}
       <div className="position-relative d-flex align-items-center mb-5">
         <Link to="/dashboard/profile" className="btn btn-link p-0">
           <i className="fs-4 bi-arrow-left"></i>
         </Link>
-
         <h2
           style={{
             fontWeight: "bold",
@@ -86,23 +121,15 @@ const ProfilDetail = () => {
         >
           {employee.name} {employee.firstname}
         </h2>
-
         <div style={{ width: "2rem" }}></div>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "flex-start",
-          gap: "100px",
-          marginBottom: "2rem",
-        }}
-      >
+      {/* Informations personnelles */}
+      <div className="d-flex justify-content-center align-items-start gap-5 mb-5">
         <div style={{ flex: "0 0 200px", textAlign: "center" }}>
           {employee.image && (
             <img
-              src={`http://localhost:3000/Images/${employee.image}`}
+              src={`http://localhost:3000/Public/Images/${employee.image}`}
               alt={employee.name}
               style={{
                 width: "200px",
@@ -114,94 +141,181 @@ const ProfilDetail = () => {
             />
           )}
         </div>
-
         <div style={{ flex: "0 0 400px" }}>
-          <p style={{ marginBottom: "1rem", fontSize: "1.1rem" }}>
+          <p>
             <strong>Nom :</strong> {employee.name}
           </p>
-          <p style={{ marginBottom: "1rem", fontSize: "1.1rem" }}>
+          <p>
             <strong>Prénom :</strong> {employee.firstname}
           </p>
-          <p style={{ marginBottom: "1rem", fontSize: "1.1rem" }}>
+          <p>
             <strong>Téléphone :</strong> {employee.phone}
           </p>
-          <p style={{ marginBottom: "1rem", fontSize: "1.1rem" }}>
+          <p>
             <strong>Email :</strong> {employee.email}
           </p>
-          <p style={{ marginBottom: "1rem", fontSize: "1.1rem" }}>
+          <p>
             <strong>Adresse :</strong> {employee.address}
           </p>
-          <p style={{ marginBottom: "1rem", fontSize: "1.1rem" }}>
+          <p>
             <strong>Catégorie :</strong> {categoryName}
           </p>
         </div>
       </div>
 
-      <div
-        style={{
-          background: "#f8f9fa",
-          border: "1px solid #ddd",
-          padding: "1.5rem",
-          borderRadius: "10px",
-          width: "500px",
-        }}
-      >
-        <h5>Visites Médicales :</h5>
-        <div className="d-flex gap-2 align-items-center mb-3">
-          <input
-            type="date"
-            value={newVisitDate}
-            onChange={(e) => setNewVisitDate(e.target.value)}
-            className="form-control w-50"
-          />
-          <button className="btn btn-success btn-sm" onClick={addVisitDate}>
-            Ajouter
-          </button>
-        </div>
-        <ul className="list-group">
-          {visits.length > 0 ? (
-            visits.map((v) => (
-              <li
-                key={v.id}
-                className="list-group-item d-flex justify-content-between align-items-center"
-              >
-                {new Date(v.visitdate).toLocaleDateString()}
-                <button
-                  className="btn btn-danger btn-sm"
-                  onClick={() => deleteVisit(v.id)}
+      {/* Bloc sections : Visites - Véhicules - Vêtements */}
+      <div className="d-flex flex-wrap justify-content-center gap-4">
+        {/* Visites médicales */}
+        <div className="p-3 border rounded bg-light" style={{ width: "350px" }}>
+          <h5 className="text-center">Visites Médicales</h5>
+          <div className="d-flex gap-2 align-items-center mb-3">
+            <input
+              type="date"
+              value={newVisitDate}
+              onChange={(e) => setNewVisitDate(e.target.value)}
+              className="form-control"
+            />
+            <button className="btn btn-success btn-sm" onClick={addVisitDate}>
+              Ajouter
+            </button>
+          </div>
+          <ul className="list-group">
+            {visits.length > 0 ? (
+              visits.map((v) => (
+                <li
+                  key={v.id}
+                  className="list-group-item d-flex justify-content-between align-items-center"
                 >
-                  Supprimer
-                </button>
-              </li>
-            ))
-          ) : (
-            <li className="list-group-item">Aucune visite enregistrée</li>
-          )}
-        </ul>
+                  {new Date(v.visitdate).toLocaleDateString()}
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => deleteVisit(v.id)}
+                  >
+                    Supprimer
+                  </button>
+                </li>
+              ))
+            ) : (
+              <li className="list-group-item">Aucune visite enregistrée</li>
+            )}
+          </ul>
+        </div>
+
+        {/* Véhicules */}
+        <div className="p-3 border rounded bg-light" style={{ width: "350px" }}>
+          <h5 className="text-center">Véhicules assignés</h5>
+          <ul className="list-group">
+            {vehicules.length > 0 ? (
+              vehicules.map((v) => (
+                <li key={v.id} className="list-group-item">
+                  {v.vehicules}
+                </li>
+              ))
+            ) : (
+              <li className="list-group-item">Aucun véhicule assigné</li>
+            )}
+          </ul>
+        </div>
+
+        {vetement && (
+          <div
+            className="p-3 border rounded bg-light"
+            style={{ width: "350px" }}
+          >
+            <h5 className="text-center">Tailles de vêtements</h5>
+            <div className="row">
+              <div className="col-6">
+                <ul className="list-group">
+                  <li className="list-group-item d-flex justify-content-between">
+                    <strong>Veste :</strong>
+                    <span>{vetement.veste || "Non renseigné"}</span>
+                  </li>
+                  <li className="list-group-item d-flex justify-content-between">
+                    <strong>Pantalon :</strong>
+                    <span>{vetement.pantalon || "Non renseigné"}</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="col-6">
+                <ul className="list-group">
+                  <li className="list-group-item d-flex justify-content-between">
+                    <strong>Pull :</strong>
+                    <span>{vetement.pull || "Non renseigné"}</span>
+                  </li>
+                  <li className="list-group-item d-flex justify-content-between">
+                    <strong>Chaussures :</strong>
+                    <span>{vetement.chaussures || "Non renseigné"}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
+      {/* Permis de conduire + SCANS côte à côte */}
       <div
-        style={{
-          background: "#f8f9fa",
-          border: "1px solid #ddd",
-          padding: "1.5rem",
-          borderRadius: "10px",
-          width: "500px",
-          marginTop: "2rem",
-        }}
+        className="d-flex justify-content-center gap-4 mt-5"
+        style={{ flexWrap: "wrap" }}
       >
-        <h5>Véhicules assignés :</h5>
-        <ul className="list-group">
-          {vehicules.length > 0 ? (
-            vehicules.map((v) => (
-              <li key={v.id} className="list-group-item">
-                {v.vehicules}
-              </li>
-            ))
+        {/* Permis de conduire */}
+        <div className="p-3 border rounded bg-light" style={{ width: "48%" }}>
+          <h5 className="text-center">Permis de conduire</h5>
+          {employee.permis ? (
+            <iframe
+              src={`http://localhost:3000/Public/Permis/${employee.permis}`}
+              width="100%"
+              height="500px"
+              style={{ borderRadius: "8px", marginTop: "1rem" }}
+              title="Permis de conduire"
+            />
           ) : (
-            <li className="list-group-item">Aucun véhicule assigné</li>
+            <p className="text-muted">Aucun permis enregistré</p>
           )}
-        </ul>
+        </div>
+
+        {/* SCANS */}
+        <div className="p-3 border rounded bg-light" style={{ width: "48%" }}>
+          <h5 className="text-center">SCANS</h5>
+          <div className="mb-3">
+            <input
+              type="file"
+              multiple
+              accept="application/pdf"
+              className="form-control"
+              onChange={(e) => setSelectedFiles(e.target.files)}
+            />
+            <button className="btn btn-primary mt-2" onClick={handleScanUpload}>
+              Télécharger
+            </button>
+          </div>
+          <ul className="list-group">
+            {scans.length > 0 ? (
+              scans.map((scan) => (
+                <li
+                  key={scan.id}
+                  className="list-group-item d-flex justify-content-between align-items-center"
+                >
+                  <a
+                    href={`http://localhost:3000/Public/Scans/${scan.namescans}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {scan.namescans}
+                  </a>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => deleteScan(scan.id)}
+                  >
+                    Supprimer
+                  </button>
+                </li>
+              ))
+            ) : (
+              <li className="list-group-item">Aucun document scanné</li>
+            )}
+          </ul>
+        </div>
       </div>
     </div>
   );

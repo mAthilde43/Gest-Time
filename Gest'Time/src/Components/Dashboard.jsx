@@ -64,6 +64,7 @@ const Dashboard = () => {
                   </span>
                 </Link>
               </li>
+
               <li className="w-100">
                 <Link
                   to="/dashboard/calendar"
@@ -73,6 +74,7 @@ const Dashboard = () => {
                   <span className="ms-2 d-none d-sm-inline">Calendrier</span>
                 </Link>
               </li>
+
               <li className="w-100">
                 <Link
                   to="/dashboard/employee"
@@ -82,6 +84,17 @@ const Dashboard = () => {
                   <span className="ms-2 d-none d-sm-inline">Employés</span>
                 </Link>
               </li>
+
+              <li className="w-100">
+                <Link
+                  to="/dashboard/profile"
+                  className="nav-link text-white px-0 align-middle d-flex align-items-center"
+                >
+                  <i className="fs-4 bi-person ms-2"></i>
+                  <span className="ms-2 d-none d-sm-inline">Profil</span>
+                </Link>
+              </li>
+
               <li className="w-100">
                 <Link
                   to="/dashboard/category"
@@ -91,6 +104,7 @@ const Dashboard = () => {
                   <span className="ms-2 d-none d-sm-inline">Statut</span>
                 </Link>
               </li>
+
               <li className="w-100">
                 <Link
                   to="/dashboard/absences"
@@ -102,6 +116,7 @@ const Dashboard = () => {
                   </span>
                 </Link>
               </li>
+
               <li className="w-100">
                 <Link
                   to="/dashboard/vehicules"
@@ -111,15 +126,17 @@ const Dashboard = () => {
                   <span className="ms-2 d-none d-sm-inline">Véhicules</span>
                 </Link>
               </li>
+
               <li className="w-100">
                 <Link
-                  to="/dashboard/profile"
+                  to="/dashboard/vetements"
                   className="nav-link text-white px-0 align-middle d-flex align-items-center"
                 >
-                  <i className="fs-4 bi-person ms-2"></i>
-                  <span className="ms-2 d-none d-sm-inline">Profil</span>
+                  <i className="fs-4 bi-bag ms-2"></i>
+                  <span className="ms-2 d-none d-sm-inline">Vêtements</span>
                 </Link>
               </li>
+
               <li className="w-100">
                 <button
                   onClick={handleLogout}
