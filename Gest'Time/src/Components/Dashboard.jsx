@@ -103,6 +103,24 @@ const Dashboard = () => {
                 </Link>
               </li>
               <li className="w-100">
+                <Link
+                  to="/dashboard/vehicules"
+                  className="nav-link text-white px-0 align-middle d-flex align-items-center"
+                >
+                  <i className="fs-4 bi-car-front ms-2"></i>
+                  <span className="ms-2 d-none d-sm-inline">Véhicules</span>
+                </Link>
+              </li>
+              <li className="w-100">
+                <Link
+                  to="/dashboard/profile"
+                  className="nav-link text-white px-0 align-middle d-flex align-items-center"
+                >
+                  <i className="fs-4 bi-person ms-2"></i>
+                  <span className="ms-2 d-none d-sm-inline">Profil</span>
+                </Link>
+              </li>
+              <li className="w-100">
                 <button
                   onClick={handleLogout}
                   className="nav-link text-white px-0 align-middle d-flex align-items-center bg-transparent border-0 w-100"

@@ -154,22 +154,6 @@ router.delete("/delete_employee/:id", (req, res) => {
   });
 });
 
-// router.get("/admin_count", (req, res) => {
-//   const sql = "SELECT count(id) as admin FROM admin";
-//   con.query(sql, (err, result) => {
-//     if (err) return res.json({ Status: false, Error: "Query Error" + err });
-//     return res.json({ Status: true, Result: result });
-//   });
-// });
-
-// router.get("/employee_count", (req, res) => {
-//   const sql = "SELECT count(id) as employee FROM employee";
-//   con.query(sql, (err, result) => {
-//     if (err) return res.json({ Status: false, Error: "Query Error" + err });
-//     return res.json({ Status: true, Result: result });
-//   });
-// });
-
 router.get("/admin_records", (req, res) => {
   const sql = "SELECT * FROM admin";
   con.query(sql, (err, result) => {
@@ -298,6 +282,171 @@ router.delete("/delete_absences/:id", (req, res) => {
   con.query(sql, [id], (err, result) => {
     if (err) return res.json({ Status: false, Error: "Query Error" + err });
     return res.json({ Status: true, Result: result });
+  });
+});
+
+router.get("/vehicules", (req, res) => {
+  const sql = `
+    SELECT vehicules.*, employee.name, employee.firstname
+    FROM vehicules
+    LEFT JOIN employee ON vehicules.conducteur_id = employee.id
+    ORDER BY vehicules.vehicules ASC
+  `;
+  con.query(sql, (err, result) => {
+    if (err) return res.json({ Status: false, Error: err });
+    return res.json({ Status: true, Result: result });
+  });
+});
+
+router.get("/vehicules/:id", (req, res) => {
+  const id = req.params.id;
+
+  const sql = `
+    SELECT vehicules.*, employee.name, employee.firstname
+    FROM vehicules
+    LEFT JOIN employee ON vehicules.conducteur_id = employee.id
+    WHERE vehicules.id = ?
+  `;
+
+  con.query(sql, [id], (err, result) => {
+    if (err) return res.json({ Status: false, Error: err });
+    if (result.length === 0)
+      return res.json({ Status: false, Error: "Véhicule non trouvé" });
+
+    return res.json({ Status: true, Result: result[0] });
+  });
+});
+
+router.post("/add_vehicules", (req, res) => {
+  const { vehicules, conducteur_id } = req.body;
+
+  const sql =
+    "INSERT INTO vehicules (`vehicules`, `conducteur_id`) VALUES (?, ?)";
+  con.query(sql, [vehicules, conducteur_id || null], (err, result) => {
+    if (err) return res.json({ Status: false, Error: err });
+    return res.json({ Status: true });
+  });
+});
+
+router.get("/vehicule/employee/:id", (req, res) => {
+  const employeeId = req.params.id;
+  const sql = `
+    SELECT vehicules.*
+    FROM vehicules
+    WHERE conducteur_id = ?
+  `;
+  con.query(sql, [employeeId], (err, result) => {
+    if (err) {
+      console.error("Erreur récupération véhicules de l'employé :", err);
+      return res.status(500).json({ Status: false, Error: "Query Error" });
+    }
+    return res.json({ Status: true, Result: result });
+  });
+});
+
+router.put("/edit_vehicules/:id", (req, res) => {
+  const id = req.params.id;
+  const { vehicules, conducteur_id } = req.body;
+
+  const sql =
+    "UPDATE vehicules SET vehicules = ?, conducteur_id = ? WHERE id = ?";
+  con.query(sql, [vehicules, conducteur_id, id], (err, result) => {
+    if (err) return res.json({ Status: false, Error: err });
+    return res.json({ Status: true, Message: "Véhicule mis à jour" });
+  });
+});
+
+router.delete("/delete_vehicules/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "DELETE FROM vehicules WHERE id = ?";
+  con.query(sql, [id], (err, result) => {
+    if (err)
+      return res.json({ Status: false, Error: "Erreur suppression : " + err });
+    return res.json({ Status: true, Result: result });
+  });
+});
+
+// ROUTES VISITE MÉDICALE
+
+// Récupérer toutes les visites médicales d'un employé
+router.get("/visitmedical/:id", (req, res) => {
+  const employeeId = req.params.id;
+  const sql =
+    "SELECT * FROM visitmedical WHERE employee_id = ? ORDER BY visitdate DESC";
+  con.query(sql, [employeeId], (err, result) => {
+    if (err)
+      return res.status(500).json({ Status: false, Error: "Query Error" });
+    return res.json(result);
+  });
+});
+
+// Récupérer toutes les visites médicales avec nom/prénom employé
+router.get("/visitmedical", (req, res) => {
+  const sql = `
+    SELECT visitmedical.*, employee.name, employee.firstname
+    FROM visitmedical
+    JOIN employee ON visitmedical.employee_id = employee.id
+    ORDER BY visitdate ASC
+  `;
+
+  con.query(sql, (err, result) => {
+    if (err) {
+      console.error(
+        "Erreur lors de la récupération des visites médicales :",
+        err
+      );
+      return res.status(500).json({ Status: false, Error: "Query Error" });
+    }
+    return res.json({ Status: true, Result: result });
+  });
+});
+
+// Ajouter une visite médicale
+router.post("/visitmedical", (req, res) => {
+  const { employee_id, visitdate } = req.body;
+  if (!employee_id || !visitdate) {
+    return res
+      .status(400)
+      .json({ Status: false, Error: "Champs requis manquants" });
+  }
+
+  const sql = "INSERT INTO visitmedical (employee_id, visitdate) VALUES (?, ?)";
+  con.query(sql, [employee_id, visitdate], (err, result) => {
+    if (err)
+      return res
+        .status(500)
+        .json({ Status: false, Error: "Erreur insertion visite médicale" });
+    return res.json({ Status: true, Message: "Visite ajoutée avec succès" });
+  });
+});
+
+// Supprimer une visite médicale
+router.delete("/visitmedical/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "DELETE FROM visitmedical WHERE id = ?";
+  con.query(sql, [id], (err, result) => {
+    if (err)
+      return res
+        .status(500)
+        .json({ Status: false, Error: "Erreur suppression visite médicale" });
+    return res.json({ Status: true, Message: "Visite supprimée" });
+  });
+});
+
+// Modifier une visite médicale
+router.put("/visitmedical/:id", (req, res) => {
+  const id = req.params.id;
+  const { visitdate } = req.body;
+  const sql = "UPDATE visitmedical SET visitdate = ? WHERE id = ?";
+  con.query(sql, [visitdate, id], (err, result) => {
+    if (err)
+      return res
+        .status(500)
+        .json({ Status: false, Error: "Erreur mise à jour visite médicale" });
+    return res.json({
+      Status: true,
+      Message: "Visite mise à jour avec succès",
+    });
   });
 });
 

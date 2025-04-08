@@ -13,6 +13,11 @@ import Absence from "./Components/Absence";
 import AddAbsence from "./Components/AddAbsence";
 import EditAbsence from "./Components/EditAbsence";
 import Home from "./Components/Home";
+import Vehicules from "./Components/Vehicules";
+import AddVehicules from "./Components/AddVehicules";
+import Profile from "./Components/Profile";
+import ProfileDetail from "./Components/ProfileDetail";
+import EditVehicules from "./Components/EditVehicules";
 
 function App() {
   return (
@@ -25,6 +30,9 @@ function App() {
           <Route path="/dashboard/employee" element={<Employee />}></Route>
           <Route path="/dashboard/category" element={<Category />}></Route>
           <Route path="/dashboard/absences" element={<Absence />}></Route>
+          <Route path="/dashboard/vehicules" element={<Vehicules />}></Route>
+          <Route path="/dashboard/profile" element={<Profile />}></Route>
+
           <Route
             path="/dashboard/add_category"
             element={<AddCategory />}
@@ -44,6 +52,18 @@ function App() {
           <Route
             path="/dashboard/edit_absences/:id"
             element={<EditAbsence />}
+          ></Route>
+          <Route
+            path="/dashboard/add_vehicules"
+            element={<AddVehicules />}
+          ></Route>
+          <Route
+            path="/dashboard/edit_vehicules/:id"
+            element={<EditVehicules />}
+          ></Route>
+          <Route
+            path="/dashboard/profile/:id"
+            element={<ProfileDetail />}
           ></Route>
         </Route>
       </Routes>

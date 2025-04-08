@@ -16,11 +16,13 @@ const Home = () => {
   const [employees, setEmployees] = useState([]);
   const [employeeTotal, setEmployeeTotal] = useState(0);
   const [absenceData, setAbsenceData] = useState([]);
+  const [visits, setVisits] = useState([]);
   const [date, setDate] = useState(new Date());
 
   useEffect(() => {
     fetchEmployees();
     fetchAbsences();
+    fetchVisits();
   }, []);
 
   const fetchEmployees = () => {
@@ -45,6 +47,19 @@ const Home = () => {
           setAbsenceData(res.data.Result);
         } else {
           alert(res.data.Error);
+        }
+      })
+      .catch((err) => console.error(err));
+  };
+
+  const fetchVisits = () => {
+    axios
+      .get("http://localhost:3000/auth/visitmedical")
+      .then((res) => {
+        if (res.data.Status) {
+          setVisits(res.data.Result);
+        } else {
+          console.error("Erreur de récupération des visites :", res.data.Error);
         }
       })
       .catch((err) => console.error(err));
@@ -96,6 +111,31 @@ const Home = () => {
     }, 0);
   };
 
+  const getMonthlyMedicalVisits = () => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    return visits
+      .filter((visit) => {
+        const visitDate = new Date(visit.visitdate);
+        return (
+          visitDate.getMonth() === currentMonth &&
+          visitDate.getFullYear() === currentYear
+        );
+      })
+      .map((visit) => {
+        const employee = employees.find((e) => e.id === visit.employee_id);
+        return employee
+          ? {
+              date: new Date(visit.visitdate).toLocaleDateString(),
+              name: `${employee.name} ${employee.firstname}`,
+            }
+          : null;
+      })
+      .filter((v) => v !== null);
+  };
+
   const formatAbsenceChartData = () => {
     const countByDate = {};
 
@@ -118,6 +158,7 @@ const Home = () => {
 
   const todayAbsentees = getTodayAbsentees();
   const totalMonthlyAbsences = getMonthlyAbsenceCount();
+  const monthlyVisits = getMonthlyMedicalVisits();
 
   return (
     <div className="home-container px-5 py-4">
@@ -133,7 +174,7 @@ const Home = () => {
           <div className="card text-white mb-3 shadow-sm">
             <div className="card-body">
               <h5 className="card-title">Nombre total d'employés</h5>
-              <p className="card-text fs-3 ">{employeeTotal}</p>
+              <p className="card-text fs-3">{employeeTotal}</p>
             </div>
           </div>
         </div>
@@ -141,7 +182,7 @@ const Home = () => {
           <div className="card text-white mb-3 shadow-sm">
             <div className="card-body">
               <h5 className="card-title">Jours d'absence ce mois-ci</h5>
-              <p className="card-text fs-3 ">{totalMonthlyAbsences}</p>
+              <p className="card-text fs-3">{totalMonthlyAbsences}</p>
             </div>
           </div>
         </div>
@@ -157,6 +198,25 @@ const Home = () => {
                 </ul>
               ) : (
                 <p className="mb-0">Aucun employé absent aujourd’hui.</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="col-md-6">
+          <div className="card text-white mb-3 shadow-sm">
+            <div className="card-body">
+              <h5 className="card-title">Prochaines visites médicales</h5>
+              {monthlyVisits.length > 0 ? (
+                <ul className="mb-0">
+                  {monthlyVisits.map((visit, index) => (
+                    <li key={index}>
+                      {visit.date} – {visit.name}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mb-0">Aucune visite prévue ce mois-ci.</p>
               )}
             </div>
           </div>

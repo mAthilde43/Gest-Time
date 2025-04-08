@@ -163,6 +163,7 @@ const EditEmployee = () => {
               onChange={(e) =>
                 setEmployee({ ...employee, category_id: e.target.value })
               }
+              value={employee.category_id}
             >
               {category.map((c) => {
                 return (
